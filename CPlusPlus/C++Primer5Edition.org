@@ -1,0 +1,26 @@
+* const 成员函数
+** const对象只能调用const成员函数
+** 例子
+   #+BEGIN_SRC C++
+     std::string isbn() const { return this->bookNo }
+   #+END_SRC
+* 构造函数
+** 在没有提供任何构造函数的情况下，C++编译器才会提供默认构造函数
+** 默认构造函数会对所有成员变量进行默认的初始化
+* 可变的成员变量
+** const对象可以更改可变成员变量的值，可就是说const成员函数可以更改该值
+** 例子
+   #+BEGIN_SRC C++
+     class Screen {
+     public:
+         void some_member() const;
+
+     private:
+         mutable size_t access_ctr; // may change even in a const object
+     };
+
+     void Screen::some_member() const
+     {
+         ++access_ctr;
+     }
+   #+END_SRC
