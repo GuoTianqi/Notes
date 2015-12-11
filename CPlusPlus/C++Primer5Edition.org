@@ -1,26 +1,104 @@
 * const 成员函数
-** const对象只能调用const成员函数
-** 例子
-   #+BEGIN_SRC C++
-     std::string isbn() const { return this->bookNo }
-   #+END_SRC
+  1.const对象只能调用const成员函数
+  例子
+  #+BEGIN_SRC C++
+    std::string isbn() const { return this->bookNo }
+  #+END_SRC
 * 构造函数
-** 在没有提供任何构造函数的情况下，C++编译器才会提供默认构造函数
-** 默认构造函数会对所有成员变量进行默认的初始化
+  1.在没有提供任何构造函数的情况下，C++编译器才会提供默认构造函数
+  2.默认构造函数会对所有成员变量进行默认的初始化
 * 可变的成员变量
-** const对象可以更改可变成员变量的值，可就是说const成员函数可以更改该值
-** 例子
-   #+BEGIN_SRC C++
-     class Screen {
-     public:
-         void some_member() const;
+  1.const对象可以更改可变成员变量的值，也就是说const成员函数可以更改该值
+  例子
+  #+BEGIN_SRC C++
+    class Screen {
+    public:
+        void some_member() const;
 
-     private:
-         mutable size_t access_ctr; // may change even in a const object
-     };
+    private:
+        mutable size_t access_ctr; // may change even in a const object
+    };
 
-     void Screen::some_member() const
-     {
-         ++access_ctr;
-     }
+    void Screen::some_member() const
+    {
+        ++access_ctr;
+    }
+  #+END_SRC
+* 构造函数的初始化列表
+  1.成员const变量和引用变量都必须在构造函数中初始化
+  2.没有默认构造函数的对象也需要在构造函数中初始化
+  3.成员变量的初始化顺序是以声明的顺序来决定的，不是已在初始化列表中的顺序来决定的
+  4.NOTE: 最好按成员声明的顺序来初始化每个成员，避免用其他成员来初始化另一个成员
+  例子
+  #+BEGIN_SRC C++
+    class ConstRef {
+    public:
+        ConstRef(int ii); private:
+        int i;
+        const int ci; int &ri;
+    };
+
+    // error: ci and ri must be initialized
+    ConstRef::ConstRef(int ii)
+    {// assignments:
+        i=ii; //ok
+        ci = ii; // error: cannot assign to a const
+        ri = i; // error: ri was never initialized
+    }
+
+    // ok: explicitly initialize reference and const members
+    ConstRef::ConstRef(int ii): i(ii), ci(ii), ri(i) { }
    #+END_SRC
+* 调用默认构造函数
+  调用C++默认构造函数不能写()，如下
+  #+BEGIN_SRC C++
+    Sales_data obj(); // oops! declares a function, not an object
+    Sales_data obj2; // ok: obj2 is an object, not a function
+  #+END_SRC
+* 隐式的类类型转换
+  1.定义了带一个参数的构造函数，也就默认定义了一个类型转换：
+  这个参数的类型可以隐式的转换为这个类的类型
+  #+BEGIN_SRC C++
+    Sales_data item();
+    string null_book = "9-999-99999-9";
+    // combine的参数类型是Sales_data
+    // 但是由于Sales_data定义了一个带String参数的构造函数
+    // 编译器会自动调用这个构造函数生成一个零时的对象
+    // 然后再调用combine
+    item.combine(null_book);
+  #+END_SRC
+  2.只有直接的类型转换，不允许多次间接的类型转换
+  #+BEGIN_SRC C++
+    // error: requires two user-defined conversions:
+    // (1) convert "9-999-99999-9" to string
+    // (2) convert that (temporary) string to Sales_data
+    item.combine("9-999-99999-9");
+
+    // 正确方式
+    // ok: explicit conversion to string, implicit conversion to Sales_data
+    item.combine(string("9-999-99999-9"));
+    // ok: implicit conversion to string, explicit conversion to Sales_data
+    item.combine(Sales_data("9-999-99999-9"));
+  #+END_SRC
+  3.禁止隐式的类型转换
+  explicit只能用于带一个参数的构造函数前面
+  explicit只能用于在类定义中构造函数声明
+  不能用于在类定义外的构造函数实现
+  #+BEGIN_SRC C++
+    // 使用explicit禁止隐式的转换
+    class Sales_data {
+    public:
+        Sales_data() = default;
+        Sales_data(const std::string &s, unsigned n, double p):
+            bookNo(s), units_sold(n), revenue(p*n) { }
+        explicit Sales_data(const std::string &s): bookNo(s) { }
+        explicit Sales_data(std::istream&);
+        // remaining members as before
+    };
+
+    // error: explicit allowed only on a constructor declaration in a class header
+    explicit Sales_data::Sales_data(istream& is)
+    {
+        read(is, *this);
+    }
+  #+END_SRC
