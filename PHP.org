@@ -1,0 +1,130 @@
+* 变量
+  1.在函数外面定义的变量不能在函数内调用
+  2.只要是变量都必须已$开头
+  3.常量不用已$开头
+  #+BEGIN_SRC php
+    define("ROOT_LOCATION", "/usr/local/www");
+  #+END_SRC
+* Boolean值
+  ** 大写和小写都可以：TRUE, FLASE, true, false
+  ** 大写版本可以被重新定义（存在一定风险），小写版本不能被重新定义
+  ** 内部实现：true被定义为1，false被定义为NULL
+* 比较
+** 等于运算符
+   1.== 会自动转换类型在做比较
+   2.=== 不会自动转换类型
+   #+BEGIN_SRC php
+     $a = "1000";
+     $b = +1000;
+     // 结果 TRUE
+     echo "$a == $b: " . ($a == $b ? "TRUE" : "FALSE");
+     // 结果 FLASE
+     echo "$a === $b: " . ($a === $b ? "TRUE" : "FALSE");
+   #+END_SRC
+* 控制流
+** switch使用==来比较
+* 函数
+  1.参数引用，跟c++一样使用&，#NOTE:在5.4.0之后已经被禁止使用
+  2.尽量用include_once替代include：include_once可以避免潜逃的include同一个文件
+  多次. #NOTE: 找不到include的文件，php会继续执行，不会报错，只会发出警告
+  3.request,request_once跟include一样，只是找不到文件时会报错
+  4.function_exists function: 检查函数是否存在
+* 类
+  1.在类内部调用成员变量用$this->成员变量
+  2.类常量定义: const CONSTRANTS_NAME.#NOTE: 无需$开头
+  3.类方法定义: static function method_name();
+  4.类变量定义: static $class_var_name;调用方式:self::$class_var_name,#NOTE：需要$
+  跟成员变量的调用不一样,成员变量引用不需要$
+  5.在类内部调用常量或静态方法用self::, #NOTE: 不用$开头
+  #+BEGIN_SRC php
+    // 类方法调用
+    Translate::lookup();
+    // 类常量引用
+    echo Translate::ENGLISH;
+    class Translate
+    {
+        // 类变量
+        static $static_property = "I'm static";
+
+        function get_sp()
+        {
+            // 类变量调用
+            return self::$static_property;
+        }
+    
+        // 类常量
+        const ENGLISH = 0;
+        const SPANISH = 1;
+        const FRENCH  = 2;
+        const GERMAN  = 3;
+
+        // 类方法
+        static function lookup()
+        {
+            // 常量引用
+            echo self::SPANISH;
+        }
+    }
+  #+END_SRC
+  6.调用父类方法：parent::method
+  #+BEGIN_SRC php
+    class Dad {
+        function test()
+        {
+          echo "[Class Dad] I am your Father<br>";
+        }
+    }
+    class Son extends Dad
+    {
+        function test()
+        {
+            echo "[Class Son] I am Luke<br>";
+        }
+        function test2()
+        {
+            parent::test();
+        }
+    }
+  #+END_SRC
+  7.构造函数和析构函数
+     1.子类需要显示的调用父类的构造函数和析构函数
+     2.调用父类构造函数:parent::__construct()
+     3.调用父类析构函数:parent::__destruct()
+  #+BEGIN_SRC php
+    class Wildcat
+    {
+        public $fur; // Wildcats have fur
+        function __construct()
+        {
+            $this->fur = "TRUE";
+        }
+
+        function __destruct() {
+        }
+    }
+
+    class Tiger extends Wildcat
+    {
+        public $stripes; // Tigers have stripes
+        function __construct()
+        {
+            parent::__construct(); // Call parent constructor first
+            $this->stripes = "TRUE";
+        }
+
+        function __destruct() {
+            parent::__destruct();
+        }
+    }
+  #+END_SRC
+  8.final函数：之类不能重载
+  #+BEGIN_SRC php
+    class User
+    {
+        final function copyright()
+        {
+            echo "This class was written by Joe Smith";
+        }
+    }
+  #+END_SRC
+  
