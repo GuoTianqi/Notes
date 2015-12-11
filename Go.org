@@ -1,0 +1,262 @@
+* 命名返回值
+  Go 的返回值可以被命名，并且像变量那样使用。
+  返回值的名称应当具有一定的意义，可以作为文档使用。
+  没有参数的 return 语句返回结果的当前值。也就是`直接`返回。
+  直接返回语句仅应当用在像下面这样的短函数中。在长的函数中它们会影响代码的可读性。
+  #+BEGIN_SRC go
+    package main
+
+    import "fmt"
+
+    func split(sum int) (x, y int) {
+        x = sum * 4 / 9
+        y = sum - x
+        return
+    }
+
+    func main() {
+        fmt.Println(split(17))
+    }
+  #+END_SRC
+* 变量
+** 初始化变量
+   变量定义可以包含初始值，每个变量对应一个。
+   如果初始化是使用表达式，则可以省略类型；变量从初始值中获得类型。
+   #+BEGIN_SRC go
+     package main
+
+     import "fmt"
+
+     var i, j int = 1, 2
+
+     func main() {
+         var c, python, java = true, false, "no!"
+         fmt.Println(i, j, c, python, java)
+     }
+   #+END_SRC
+** 短声明变量
+   在函数中， := 简洁赋值语句在明确类型的地方，可以用于替代 var 定义。
+   NOTE: 函数外的每个语句都必须以关键字开始（ var 、 func 、等等）， := 结构不能使用在函数外
+   #+BEGIN_SRC go
+     package main
+
+     import "fmt"
+
+     // 函数外不能使用短变量生命，下面是错误的语法
+     // e := 4
+
+     func main() {
+         var i, j int = 1, 2
+         k := 3
+         c, python, java := true, false, "no!"
+
+         fmt.Println(i, j, k, c, python, java)
+     }
+   #+END_SRC 
+* 控制流
+** if
+   if 语句可以在条件之前执行一个简单的语句
+   由这个语句定义的变量的作用域仅在 if else 范围之内
+   #+BEGIN_SRC go
+     package main
+
+     import (
+         "fmt"
+         "math"
+     )
+
+     func pow(x, n, lim float64) float64 {
+         if v := math.Pow(x, n); v < lim {
+             return v
+         } else {
+             fmt.Println("%g >= %g\n", v, lim)
+         }
+
+         return lim
+     }
+
+     func main() {
+         fmt.Println(
+             pow(3, 2, 10),
+             pow(3, 3, 20),
+         )
+     }
+   #+END_SRC
+** switch
+   1. 除非以 fallthrough 语句结束，否则分支会自动终止，
+      跟if一样，可以在switch内执行一个简单语句
+      #+BEGIN_SRC go
+        package main
+
+        import (
+            "fmt"
+            "runtime"
+        )
+
+        func main() {
+            fmt.Print("Go runs on")
+            switch os := runtime.GOOS; os {
+            case "darwin":
+                fmt.Println("OS X.")
+            case "linux":
+                fmt.Println("Linux.")
+            default:
+                fmt.Printf("%s.", os)
+            }
+        }
+      #+END_SRC
+   2. 没有条件的 switch 同 switch true 一样
+      #+BEGIN_SRC go
+        package main
+
+        import (
+            "fmt"
+            "time"
+        )
+
+        func main() {
+            t := time.Now()
+            switch {
+            case t.Hour() < 12:
+                fmt.Println("Good morning!")
+            case t.Hour() < 17:
+                fmt.Println("Good afternoon")
+            default:
+                fmt.Println("Good evening")
+            }
+        }
+      #+END_SRC
+** defer
+   1. defer 语句会延迟函数的执行直到上层函数返回。
+   延迟调用的参数会立刻生成，但是在上层函数返回前函数都不会被调用。
+   #+BEGIN_SRC go
+     package main
+
+     import "fmt"
+
+     func main() {
+         defer fmt.Println("world")
+
+         fmt.Println("hello")
+     }
+   #+END_SRC
+   输出：hello
+        world
+
+   2. defer栈
+   延迟的函数调用被压入一个栈中。
+   当函数返回时， 会按照后进先出的顺序调用被延迟的函数调用。
+   #+BEGIN_SRC go
+     package main
+
+     import "fmt"
+
+     func main() {
+         fmt.Println("counting")
+
+         for i := 0; i < 10; i++ {
+             defer fmt.Println(i)
+         }
+
+         fmt.Println("done")
+     }
+
+   #+END_SRC
+
+* 结构体
+  一个结构体（ struct ）就是一个字段的集合。
+  结构体字段可以通过结构体指针来访问。通过指针间接的访问是透明的。
+  #+BEGIN_SRC go
+    package main
+
+    import "fmt"
+
+    type Vertex struct {
+        X int
+        Y int
+    }
+
+    func main() {
+        fmt.Println(Vertex{1, 2})
+
+        v := Vertex{1, 2}
+        v.X = 4
+        fmt.Println(v.X)
+
+        // 结构体指针访问字段
+        p := &v
+        p.X = 1e9
+
+        fmt.Println(v)
+    }
+  #+END_SRC
+* 数组
+  #+BEGIN_SRC go
+    var a [10]int
+  #+END_SRC
+* slice
+  1. 一个 slice 会指向一个序列的值，并且包含了长度信息。
+     []T 是一个元素类型为 T 的 slice。
+     #+BEGIN_SRC go
+       package main
+
+       import "fmt"
+
+       func main() {
+           s := []int{2, 3, 5, 7, 11, 13}
+           fmt.Println("s ==", s)
+
+           for i := 0; i < len(s); i++ {
+               fmt.Printf("s[%d] == %d\n", i, s[i])
+           }
+       }
+     #+END_SRC
+  2. nil slice。
+     slice 的零值是 nil。一个 nil 的 slice 的长度和容量是 0。
+* range
+  1. for 循环的 range 格式可以对 slice 或者 map 进行迭代循环。
+     #+BEGIN_SRC go
+       package main
+
+       import "fmt"
+
+       var pow = []int{1, 2, 4, 8, 16, 32, 64, 128}
+
+       func main() {
+           for i, v := range pow {
+               fmt.Printf("2**%d = %d\n", i, v)
+           }
+       }
+     #+END_SRC
+* map
+  1. map 映射键到值。
+     map 在使用之前必须用 make 而不是 new 来创建；值为 nil 的 map 是空的，并且不能赋值。
+     #+BEGIN_SRC go
+       package main
+
+       import "fmt"
+
+       type Vertex struct {
+           Lat, Long float64
+       }
+
+       var m map[string]Vertex
+
+       func main() {
+           m = make(map[string]Vertex)
+           m["Bell Labs"] = Vertex{
+               40.68433, -74.39967,
+           }
+           fmt.Println(m["Bell Labs"])
+       }
+     #+END_SRC
+  2. 修改map
+     1. 获得元素
+        elem = m[key]
+     2. 删除元素
+        delete(m, key)
+     3. 通过双赋值检测某个键存在
+        elem, ok = m[key]
+        如果 elem ok 还未声明:
+        elem, ok := m[key]
+     
