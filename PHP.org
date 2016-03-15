@@ -9,6 +9,8 @@
   ** 大写和小写都可以：TRUE, FLASE, true, false
   ** 大写版本可以被重新定义（存在一定风险），小写版本不能被重新定义
   ** 内部实现：true被定义为1，false被定义为NULL
+* String
+  * 字符串会被按照该脚本文件相同的编码方式来编码
 * 比较
 ** 等于运算符
    1.== 会自动转换类型在做比较
@@ -127,4 +129,36 @@
         }
     }
   #+END_SRC
-  
+  9.成员变量可以初始化，但是初始化的值必须是*常数*
+  10.后期静态绑定，调用方式static::
+  #+BEGIN_SRC php
+    // self::的限制
+    class A {
+        public static function who() {
+            echo __CLASS__;
+        }
+
+        public static funcion test() {
+            self::who();
+        }
+    }
+
+    class B extends A {
+        public static function who() {
+            echo __CLASS__;
+        }
+    }
+
+    B::test();
+    // 输出
+    // A
+
+    // 要输出B，class A test方法需要改为：
+    class A {
+        // ....
+        public static funcion test() {
+            static::who(); // 后期静态绑定
+        }
+    }
+  #+END_SRC
+
